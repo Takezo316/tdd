@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
+use App\Models\Task;
 use Illuminate\Http\Request;
 
 class ProjectTasksController extends Controller
@@ -28,6 +29,12 @@ class ProjectTasksController extends Controller
      */
     public function store(Project $project)
     {
+        if(auth()->user()->isNot($project->owner)){
+            abort(403);
+        }
+
+        request()->validate(['body' => 'required']);
+
         $project->addTask(request('body'));
 
         return redirect($project->path());
@@ -52,9 +59,20 @@ class ProjectTasksController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Project $project, Task $task)
     {
-        //
+        if(auth()->user()->isNot($task->project->owner)){
+            abort(403);
+        }
+
+        request()->validate(['body' => 'required']);
+
+        $task->update([
+            'body' => request('body'),
+            'completed' => request()->has('completed')
+        ]);
+
+        return redirect($project->path());
     }
 
     /**
